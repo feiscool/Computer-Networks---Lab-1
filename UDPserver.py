@@ -1,21 +1,15 @@
 import socket
+   
+UDP_IP = "131.204.14.65"
+UDP_PORT = 10011
+   
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Internet, UDP
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #The SO_REUSEADDR flag tells the kernel to reuse a local socket in TIME_WAIT state, without waiting for its natural timeout to expire.
+sock.bind((UDP_IP, UDP_PORT))
+sock.listen(5)
+(conn, addr) = sock.accept()
 
-# A UDP server
-
-# Set up a UDP server
-UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-
-# Listen on port 10011
-portNum "10011"  
-
-# (to all IP addresses on this system)
-listen_addr = ("", portNum)
-UDPSock.bind(listen_addr)
-
-# Report on all data packets received and
-# where they came from in each case (as this is
-# UDP, each may be from a different source and it's
-# up to the server to sort this out!)
 while True:
-        data,addr = UDPSock.recvfrom(1024)
-        print data.strip(),addr
+	print ("before")
+   	lent = sock.recvfrom(1024) # buffer size is 1024 bytes
+	print ("received message:", lent)
