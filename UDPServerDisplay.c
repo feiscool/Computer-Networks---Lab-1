@@ -17,8 +17,20 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+/*    switch (opcodeInput) {
+    	case "+": result = operand1Input + operand2Input;
+        case "-": result = operand1Input - operand2Input;
+        case "|": result = operand1Input | operand2Input;
+        case "&": result = operand1Input & operand2Input;
+        case ">>": result = operand1Input >> operand2Input;;
+        case "<<": result = operand1Input << operand2Input;;
+        default: throw new Exception("invalid logic");
+    }
+    */
 
-// _M1 Not needed anymore #define MYPORT "10010"  // the port users will be connecting to
+// _M1 Not needed anymore 
+#define MYPORT "10011"  
+// the port users will be connecting to
 
 #define MAXBUFLEN 100
 
@@ -35,8 +47,8 @@ void *get_in_addr(struct sockaddr *sa)
 }
 
 // _M1 , now we need arguments int main(void)
-int main(int argc, char *argv[]) // _M1 
-{
+int main(int argc, char *argv[]) { // _M1
+
 	int sockfd;
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
@@ -59,6 +71,7 @@ int main(int argc, char *argv[]) // _M1
 	hints.ai_flags = AI_PASSIVE; // use my IP
 
 	if ((rv = getaddrinfo(NULL, argv[1] /* _M1 MYPORT */, &hints, &servinfo)) != 0) {
+		printf("successful getting argv");
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
 	}
@@ -99,13 +112,15 @@ int main(int argc, char *argv[]) // _M1
 	  }
 
 	  printf("listener: got packet from %s\n",
-		 inet_ntop(their_addr.ss_family,
-			   get_in_addr((struct sockaddr *)&their_addr),
-			   s, sizeof s));
+		inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr),
+		s, sizeof s));
+
 	  printf("listener: packet is %d bytes long\n", numbytes);
 	  buf[numbytes] = '\0';
 	  printf("listener: packet contains \"%s\"\n", buf);
 	  displayBuffer(buf,numbytes); // _M3
+	
+	  //send req code back to client
 	} // _M2 
 	close(sockfd);
 
