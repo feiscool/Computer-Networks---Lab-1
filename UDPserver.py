@@ -16,7 +16,20 @@ while True:
     
     print >>sys.stderr, 'received %s bytes from %s' % (len(data), address)
     print >>sys.stderr, data
+
+    #this displays nothing. we need to parse data here
+    # for x in range (sys.getsizeof(data), 0):
+    # 	print('x', data[x])
     
     if data:
         sent = sock.sendto(data, address)
         print >>sys.stderr, 'sent %s bytes back to %s' % (sent, address)
+
+	# switch (opcodeInput):
+ #    	case "+": result = operand1Input + operand2Input
+ #        case "-": result = operand1Input - operand2Input
+ #        case "|": result = operand1Input | operand2Input
+ #        case "&": result = operand1Input & operand2Input
+ #        case ">>": result = operand1Input >> operand2Input
+ #        case "<<": result = operand1Input << operand2Input
+ #        default: throw new Exception("invalid logic")
