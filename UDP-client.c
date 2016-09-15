@@ -1,7 +1,3 @@
-/*
-** talker.c -- a datagram "client" demo
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -12,30 +8,33 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <time.h>
 
-#define SERVERPORT "10011"	// the port users will be connecting to
-//req code...sent to server, get back, increment, sent next
-int request_id = 1;//rand()%255;
-
-int main(int argc, char *argv[]) {
-	struct packed_msg {   
+int main(int argc, char *argv[])
+{
+	int sockfd;
+	struct addrinfo hints, *servinfo, *p;
+	int rv;
+	int numbytes;
+	uint8_t opcode_input;
+	uint16_t operand_1_input;
+	uint16_t operand_2_input;
+	uint8_t request_ID = 0;
+	const uint8_t TML = 8;
+	const uint8_t number_operands = 2;
+	
+	// Packed struct that will be sent as packet
+	struct packed_message {   
 		uint8_t tml;
 		uint8_t req_id;
 		uint8_t opcode; 
 		uint8_t num_operands;
 		int16_t operand1;   
 		int16_t operand2;   
-	} __attribute__((__packed__));  
+	} __attribute__((__packed__));
 
-	srand(time(NULL));
-	int sockfd;
-	struct addrinfo hints, *servinfo, *p;
-	int rv;
-	int numbytes;
-
+	// Keep in mind - argv[0] is the name of the program
 	if (argc != 3) {
-		fprintf(stderr,"usage: talker hostname message\n");
+		fprintf(stderr,"Error: inappropriate amount of arguments given. \n");
 		exit(1);
 	}
 
@@ -43,16 +42,17 @@ int main(int argc, char *argv[]) {
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_DGRAM;
 
-	if ((rv = getaddrinfo(argv[1], SERVERPORT, &hints, &servinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-		return 1;
+	if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo() error: %s\n", gai_strerror(rv));
+		exit(2);
 	}
 
-	// loop through all the results and make a socket
+	// Loop through all the results and make a socket
 	for(p = servinfo; p != NULL; p = p->ai_next) {
+	
 		if ((sockfd = socket(p->ai_family, p->ai_socktype,
 				p->ai_protocol)) == -1) {
-			perror("talker: socket");
+			perror("Client: socket() error");
 			continue;
 		}
 
@@ -60,35 +60,46 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (p == NULL) {
-		fprintf(stderr, "talker: failed to create socket\n");
-		return 2;
+		fprintf(stderr, "Client: failed to create socket! \n");
+		exit(3);
 	}
 
-	int operand1Input;
-	int operand2Input;
-	int opcodeInput;
+	while(1) {
+	
+		// Get information from the user
+		printf ("\nEnter an opcode: ");
+  		scanf ("%d", &opcode_input);
+  		
+  		// Ensure the opcode is valid
+  		while(opcode_input < 0 || opcode_input > 5) {
+  			printf ("Invalid input. Enter a new opcode: ");
+  			scanf ("%d", &opcode_input);
+  		}
+  		
+  		printf ("Enter the first operand: ");
+  		scanf ("%d", &operand_1_input);
+  		printf ("Enter the second operand: ");
+  		scanf ("%d", &operand_2_input);
+  		
+  		// Pack the operands, etc., into a structure to be sent
+  		struct packed_message packet = {
+  			TML, request_ID, opcode_input, number_operands, operand_1_input, operand_2_input
+  		};
 
-	printf ("Enter Operand1: \n");
-  	scanf ("%s", &operand1Input);
-  	printf ("Enter Operand2: ");
-  	scanf ("%s", &operand2Input);
-  	printf ("Enter the Opcode: ");
-  	scanf ("%s", &opcodeInput);
+		// Send the packet and handle the error case
+		// if ((numbytes = sendto(sockfd, (void *)&packet, sizeof(packet), 0,
+// 				 p->ai_addr, p->ai_addrlen)) == -1) {
+// 			perror("Client: sendto() error!");
+// 			exit(4);
+// 		}
 
-  	struct packed_msg packed = {8, request_id, opcodeInput, 2, operand1Input, operand2Input};
-  	request_id++;
+		//freeaddrinfo(servinfo);
 
-	if ((numbytes = sendto(sockfd, (void *)&packed, sizeof(packed), 0,
-			 p->ai_addr, p->ai_addrlen)) == -1) {
-		perror("talker: sendto");
-		exit(1);
+		printf("Client: sent %d bytes to %s\n", numbytes, argv[1]);
+		//close(sockfd);
+		
+		request_ID++;
 	}
-
-	//recv req id from server and use that to increment	
-	freeaddrinfo(servinfo);
-
-	printf("talker: sent %d bytes to %s\n", numbytes, argv[1]);
-	close(sockfd);
 
 	return 0;
 }
