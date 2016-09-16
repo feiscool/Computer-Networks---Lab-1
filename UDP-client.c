@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 	const uint8_t TML = 8;					// The message length is always eight bytes
 	const uint8_t number_operands = 2;		// There's always two operands 
 	
-	// Packed struct that will be sent as a packet. A packed struct
+	// Packed struct that will be sent as the data in a packet. A packed struct
 	// is used as it will not contain any "padding" added by the compiler
 	struct packed_message {   
 		uint8_t tml;
@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
 	hints.ai_family = AF_UNSPEC;		// No preference for IPv4 or IPv6
 	hints.ai_socktype = SOCK_DGRAM;		// Use UDP sockets, not TCP
 
-	// Call getaddrinfo() and handle the (non-zero) error case. 
-	// getaddrinfo() performs the necessary DNS and service name lookups,
+	// Purpose: Call getaddrinfo() and handle the (non-zero) error case. 
+	// Detail: getaddrinfo() performs the necessary DNS and service name lookups,
 	// in addition to creating the structs needed to make a socket. The
 	// IP address or hostname (like google.com) is the first argument,
 	// the port number (like http or 10011) is the second, etc. The fourth
@@ -57,30 +57,41 @@ int main(int argc, char *argv[])
 		exit(2);
 	}
 
-	// Loop through all the results and make a socket
-	for(p = servinfo; p != NULL; p = p->ai_next) {
+	// Purpose: Create a socket using the socket() system call and handle
+	// the (-1) error case. 
+	// Detail: Loop through the servinfo linked list, searching for a valid
+	// entry. servinfo contains one or more addrinfo structs, as a host
+	// can have multiple addresses. When a valid entry is found, the socket
+	// is created, and the loop breaks. "sockfd" is the file descriptor to the
+	// socket
+	for(p = servinfo; p != NULL; p = p -> ai_next) {
 	
-		if ((sockfd = socket(p->ai_family, p->ai_socktype,
-				p->ai_protocol)) == -1) {
+		if ((sockfd = socket(p -> ai_family, p -> ai_socktype,
+				p -> ai_protocol)) == -1) {
 			perror("Client: socket() error");
 			continue;
 		}
 
 		break;
 	}
-
+	
+	// "p" is null if servinfo contains no addrinfo structs. Due to the
+	// boolean condition in the above loop, a socket will never be created
+	// if servinfo contains no structs 
 	if (p == NULL) {
 		fprintf(stderr, "Client: failed to create socket! \n");
 		exit(3);
 	}
 
+	// Infinte loop used to continuously prompt the user for information, send the 
+	// information to the server, and then display the results from the server
 	while(1) {
 	
 		// Get the opcode from the user
-		printf("\nEnter an opcode: ");
-  		scanf("%d", &opcode_input);
+		printf("\nEnter an opcode (0-5): ");
+  		scanf("%d", &opcode_input);		// Grabs a decimal value and stores it
   		
-  		// Ensure the opcode is valid
+  		// Ensure the opcode is valid (between 0 and 5, inclusive) 
   		while(opcode_input < 0 || opcode_input > 5) {
   			printf ("Invalid input. Enter a new opcode: ");
   			scanf ("%d", &opcode_input);
@@ -94,12 +105,12 @@ int main(int argc, char *argv[])
   		
   		printf("\nOpcode = %d, Operand 1 = %d, Operand 2 = %d \n", opcode_input, operand_1_input, operand_2_input);
   		
-  		// Pack the operands, etc., into a structure to be sent
+  		// Pack the operands, etc., into a struct. This struct will be sent as the data in a packet
   		struct packed_message packet = {
   			TML, request_ID, opcode_input, number_operands, operand_1_input, operand_2_input
   		};
 
-		// Send the packet and handle the error case
+		// Send the packet using sendto() and handle the (-1) error case
 		if ((numbytes = sendto(sockfd, (void *)&packet, sizeof(packet), 0,
 				 p->ai_addr, p->ai_addrlen)) == -1) {
 			perror("Client: sendto() error!");
@@ -108,12 +119,14 @@ int main(int argc, char *argv[])
 
 		printf("Client: sent %d bytes to %s\n", numbytes, argv[1]);
 		
-		// Increment the Request ID for the next iteration of the loop to keep it unique 
+		// Increment the Request ID for the next iteration of the loop (to keep it unique)
 		request_ID++;
 	}
 
 	// Frees up the memory used by the servinfo struct created earlier 
 	freeaddrinfo(servinfo);
+	
+	// Close the socket
 	close(sockfd);
 
 	return 0;
