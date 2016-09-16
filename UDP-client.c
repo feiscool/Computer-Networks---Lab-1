@@ -15,9 +15,9 @@ int main(int argc, char *argv[])
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
 	int numbytes;
+	int16_t operand_2_input;
+	int16_t operand_1_input;
 	uint8_t opcode_input;
-	uint16_t operand_1_input;
-	uint16_t operand_2_input;
 	uint8_t request_ID = 0;
 	const uint8_t TML = 8;
 	const uint8_t number_operands = 2;
@@ -67,8 +67,8 @@ int main(int argc, char *argv[])
 	while(1) {
 	
 		// Get information from the user
-		printf ("\nEnter an opcode: ");
-  		scanf ("%d", &opcode_input);
+		printf("\nEnter an opcode: ");
+  		scanf("%d", &opcode_input);
   		
   		// Ensure the opcode is valid
   		while(opcode_input < 0 || opcode_input > 5) {
@@ -76,10 +76,12 @@ int main(int argc, char *argv[])
   			scanf ("%d", &opcode_input);
   		}
   		
-  		printf ("Enter the first operand: ");
-  		scanf ("%d", &operand_1_input);
-  		printf ("Enter the second operand: ");
-  		scanf ("%d", &operand_2_input);
+  		printf("Enter the first operand: ");
+  		scanf("%d", &operand_1_input);
+  		printf("Enter the second operand: ");
+  		scanf("%d", &operand_2_input);
+  		
+  		printf("\nOpcode = %d, Operand 1 = %d, Operand 2 = %d \n", opcode_input, operand_1_input, operand_2_input);
   		
   		// Pack the operands, etc., into a structure to be sent
   		struct packed_message packet = {
@@ -87,19 +89,19 @@ int main(int argc, char *argv[])
   		};
 
 		// Send the packet and handle the error case
-		// if ((numbytes = sendto(sockfd, (void *)&packet, sizeof(packet), 0,
-// 				 p->ai_addr, p->ai_addrlen)) == -1) {
-// 			perror("Client: sendto() error!");
-// 			exit(4);
-// 		}
-
-		//freeaddrinfo(servinfo);
+		if ((numbytes = sendto(sockfd, (void *)&packet, sizeof(packet), 0,
+				 p->ai_addr, p->ai_addrlen)) == -1) {
+			perror("Client: sendto() error!");
+			exit(4);
+		}
 
 		printf("Client: sent %d bytes to %s\n", numbytes, argv[1]);
-		//close(sockfd);
 		
 		request_ID++;
 	}
+
+	freeaddrinfo(servinfo);
+	close(sockfd);
 
 	return 0;
 }
