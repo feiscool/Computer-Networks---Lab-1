@@ -14,7 +14,7 @@
 int main(int argc, char *argv[])
 {
 	int sockfd;
-	struct addrinfo hints, *servinfo, *p;
+	struct addrinfo hints, *servinfo, *p, *p2;
 	int rv;
 	int numbytes;
 	int16_t operand_2_input;
@@ -46,12 +46,12 @@ int main(int argc, char *argv[])
 	hints.ai_socktype = SOCK_DGRAM;		// Use UDP sockets, not TCP
 
 	// Purpose: Call getaddrinfo() and handle the (non-zero) error case. 
-	// Detail: getaddrinfo() performs the necessary DNS and service name lookups,
-	// in addition to creating the structs needed to make a socket. The
-	// IP address or hostname (like google.com) is the first argument,
+	// Detail: getaddrinfo() performs the necessary DNS and service name lookups
+	// regarding the destination, in addition to creating the structs needed to make
+	// a socket. The IP address or hostname (like google.com) is the first argument,
 	// the port number (like http or 10011) is the second, etc. The fourth
 	// argument "servinfo" is a struct pointer. Once the function is called,
-	// servinfo will point to a linked list of one or more addrinfo's structs
+	// servinfo will point to a linked list of one or more addrinfo's structs.
 	if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo() error: %s\n", gai_strerror(rv));
 		exit(2);
@@ -111,13 +111,14 @@ int main(int argc, char *argv[])
   		};
 
 		// Send the packet using sendto() and handle the (-1) error case
+		// Details: Note that an implicit bind occurs when sendto() is called.
+		// This is why a bind() call is not needed in order to receive data from
+		// the server using recvfrom(). 
 		if ((numbytes = sendto(sockfd, (void *)&packet, sizeof(packet), 0,
-				 p->ai_addr, p->ai_addrlen)) == -1) {
+				 p -> ai_addr, p -> ai_addrlen)) == -1) {
 			perror("Client: sendto() error!");
 			exit(4);
 		}
-
-		printf("Client: sent %d bytes to %s\n", numbytes, argv[1]);
 		
 		// Increment the Request ID for the next iteration of the loop (to keep it unique)
 		request_ID++;
