@@ -1,3 +1,5 @@
+// UDP-client.c
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -18,11 +20,12 @@ int main(int argc, char *argv[])
 	int16_t operand_2_input;
 	int16_t operand_1_input;
 	uint8_t opcode_input;
-	uint8_t request_ID = 0;
-	const uint8_t TML = 8;
-	const uint8_t number_operands = 2;
+	uint8_t request_ID = 0;					// The Request ID starts at zero
+	const uint8_t TML = 8;					// The message length is always eight bytes
+	const uint8_t number_operands = 2;		// There's always two operands 
 	
-	// Packed struct that will be sent as packet
+	// Packed struct that will be sent as a packet. A packed struct
+	// is used as it will not contain any "padding" added by the compiler
 	struct packed_message {   
 		uint8_t tml;
 		uint8_t req_id;
@@ -32,16 +35,23 @@ int main(int argc, char *argv[])
 		int16_t operand2;   
 	} __attribute__((__packed__));
 
-	// Keep in mind - argv[0] is the name of the program
+	// Keep in mind - argv[0] is the name of the program!
 	if (argc != 3) {
 		fprintf(stderr,"Error: inappropriate amount of arguments given. \n");
 		exit(1);
 	}
 
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_DGRAM;
+	memset(&hints, 0, sizeof hints);	// Ensure the struct is empty 
+	hints.ai_family = AF_UNSPEC;		// No preference for IPv4 or IPv6
+	hints.ai_socktype = SOCK_DGRAM;		// Use UDP sockets, not TCP
 
+	// Call getaddrinfo() and handle the (non-zero) error case. 
+	// getaddrinfo() performs the necessary DNS and service name lookups,
+	// in addition to creating the structs needed to make a socket. The
+	// IP address or hostname (like google.com) is the first argument,
+	// the port number (like http or 10011) is the second, etc. The fourth
+	// argument "servinfo" is a struct pointer. Once the function is called,
+	// servinfo will point to a linked list of one or more addrinfo's structs
 	if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo() error: %s\n", gai_strerror(rv));
 		exit(2);
@@ -66,7 +76,7 @@ int main(int argc, char *argv[])
 
 	while(1) {
 	
-		// Get information from the user
+		// Get the opcode from the user
 		printf("\nEnter an opcode: ");
   		scanf("%d", &opcode_input);
   		
@@ -76,6 +86,7 @@ int main(int argc, char *argv[])
   			scanf ("%d", &opcode_input);
   		}
   		
+  		// Get the two operands from the user
   		printf("Enter the first operand: ");
   		scanf("%d", &operand_1_input);
   		printf("Enter the second operand: ");
@@ -97,9 +108,11 @@ int main(int argc, char *argv[])
 
 		printf("Client: sent %d bytes to %s\n", numbytes, argv[1]);
 		
+		// Increment the Request ID for the next iteration of the loop to keep it unique 
 		request_ID++;
 	}
 
+	// Frees up the memory used by the servinfo struct created earlier 
 	freeaddrinfo(servinfo);
 	close(sockfd);
 
