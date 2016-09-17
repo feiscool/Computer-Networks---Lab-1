@@ -11,7 +11,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#define MAXBUFLEN 7
+#define MAXBUFLEN 100
 
 int main(int argc, char *argv[])
 {
@@ -22,6 +22,8 @@ int main(int argc, char *argv[])
 	int16_t operand_1_input;
 	uint8_t opcode_input;
 	uint8_t request_ID = 0;					// The Request ID starts at zero
+	uint8_t received_request_ID;			// Request ID received from server
+	int32_t received_result;				// Result of calculation received from server
 	const uint8_t TML = 8;					// The message length is always eight bytes
 	const uint8_t number_operands = 2;		// There's always two operands 
 	char buffer[MAXBUFLEN];					// Buffer for input from server
@@ -142,6 +144,18 @@ int main(int argc, char *argv[])
 			perror("Client: recvfrom() error");
 			exit(1);
 		}
+	
+		/**
+		
+		FIXES MIGHT BE NEEDED BELOW WHEN GETTING THE VALUES!!!!
+		
+		**/
+	
+		// Get the Request ID and result from the buffer
+		received_request_ID = *(uint8_t *)(buffer + 1);	// ??????
+		received_result = *(int32_t *)(buffer + 7);		// ??????
+		
+		printf("Packet received. Request ID = %d, Result = %d.", received_request_ID, received_result);
 		
 		// Increment the Request ID for the next iteration of the loop (to keep it unique)
 		request_ID++;
