@@ -145,15 +145,9 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 	
-		/**
-		
-		FIXES MIGHT BE NEEDED BELOW WHEN GETTING THE VALUES!!!!
-		
-		**/
-	
 		// Get the Request ID and result from the buffer
-		received_request_ID = *(uint8_t *)(buffer + 1);	// ??????
-		received_result = *(int32_t *)(buffer + 7);		// ??????
+		received_request_ID = *(uint8_t *)(buffer + 1);	
+		received_result = *(int32_t *)(buffer + 3);		
 		
 		printf("Packet received. Request ID = %d, Result = %d.", received_request_ID, received_result);
 		
