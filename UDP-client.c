@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
 		received_request_ID = *(uint8_t *)(buffer + 1);	
 		received_result = *(int32_t *)(buffer + 3);		
 		
-		printf("Packet received. Request ID = %d, Result = %d.", received_request_ID, received_result);
+		printf("Client: Packet received. Request ID = %d, Result = %d.", received_request_ID, received_result);
 		
 		// Increment the Request ID for the next iteration of the loop (to keep it unique)
 		request_ID++;
