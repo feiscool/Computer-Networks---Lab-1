@@ -11,11 +11,12 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
+#define MAXBUFLEN 7
+
 int main(int argc, char *argv[])
 {
-	int sockfd;
-	struct addrinfo hints, *servinfo, *p, *p2;
 	int rv;
+	int sockfd;
 	int numbytes;
 	int16_t operand_2_input;
 	int16_t operand_1_input;
@@ -23,6 +24,10 @@ int main(int argc, char *argv[])
 	uint8_t request_ID = 0;					// The Request ID starts at zero
 	const uint8_t TML = 8;					// The message length is always eight bytes
 	const uint8_t number_operands = 2;		// There's always two operands 
+	char buffer[MAXBUFLEN];					// Buffer for input from server
+	socklen_t server_addr_len;
+	struct addrinfo hints, *servinfo, *p;
+	struct sockaddr_storage server_addr;
 	
 	// Packed struct that will be sent as the data in a packet. A packed struct
 	// is used as it will not contain any "padding" added by the compiler
@@ -79,7 +84,7 @@ int main(int argc, char *argv[])
 	// boolean condition in the above loop, a socket will never be created
 	// if servinfo contains no structs 
 	if (p == NULL) {
-		fprintf(stderr, "Client: failed to create socket! \n");
+		fprintf(stderr, "Client: failed to create socket \n");
 		exit(3);
 	}
 
@@ -110,14 +115,32 @@ int main(int argc, char *argv[])
   			TML, request_ID, opcode_input, number_operands, operand_1_input, operand_2_input
   		};
 
-		// Send the packet using sendto() and handle the (-1) error case
+		// Purpose: Send the packet using sendto() and handle the (-1) error case.
 		// Details: Note that an implicit bind occurs when sendto() is called.
 		// This is why a bind() call is not needed in order to receive data from
 		// the server using recvfrom(). 
 		if ((numbytes = sendto(sockfd, (void *)&packet, sizeof(packet), 0,
 				 p -> ai_addr, p -> ai_addrlen)) == -1) {
-			perror("Client: sendto() error!");
+			perror("Client: sendto() error");
 			exit(4);
+		}
+		
+		printf("Client: sent %d bytes to %s. Now waiting to receive... \n", numbytes, argv[1]);
+		
+		server_addr_len = sizeof(server_addr);
+		
+		// Purpose: Receive a response from the server using recvfrom() and
+		// handle the (-1) error case.
+		// Details: Note that server_addr is never defined and is passed in
+		// by reference. This is because the function will simply accept any
+		// incoming data, as UDP is a connectionless protocol. The sender is not
+		// known. So, the function will insert the address information after data
+		// is received, since the sender is now known. The sockaddr type of structure
+		// is used as the sender could be using IPv4 or IPv6 
+		if ((numbytes = recvfrom(sockfd, buffer, MAXBUFLEN - 1, 0, 
+				(struct sockaddr *)&server_addr, &server_addr_len)) == -1) {
+			perror("Client: recvfrom() error");
+			exit(1);
 		}
 		
 		// Increment the Request ID for the next iteration of the loop (to keep it unique)
