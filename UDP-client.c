@@ -10,7 +10,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <time.h>
+#include <sys/time.h> 
 
 #define MAXBUFLEN 100
 
@@ -33,8 +33,8 @@ int main(int argc, char *argv[])
 	socklen_t server_addr_len;
 	struct addrinfo hints, *servinfo, *p;
 	struct sockaddr_storage server_addr;
-	clock_t start;
-	clock_t end;
+	struct timeval start;
+	struct timeval end;
 	
 	// Packed struct that will be sent as the data in a packet. A packed struct
 	// is used as it will not contain any "padding" added by the compiler
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
   			TML, request_ID, opcode_input, number_operands, operand_1_input, operand_2_input
   		};
   		
-  		start = clock();		// Start the timer
+  		gettimeofday(&start, NULL);		// "Start" the timer
 
 		// Purpose: Send the packet using sendto() and handle the (-1) error case.
 		// Details: Note that an implicit bind occurs when sendto() is called.
@@ -150,9 +150,11 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 		
-		end = clock();		// Stop the timer
+		gettimeofday(&end, NULL);		// "Stop" the timer
 		
-        time_taken = (double)(end - start) / CLOCKS_PER_SEC;
+		// Calculate the time taken (in milliseconds)
+        time_taken = (end.tv_sec - start.tv_sec) * 1000.0;
+    	time_taken += (end.tv_usec - start.tv_usec) / 1000.0; 
 	
 		// Get the Request ID and result from the buffer
 		received_request_ID = *(uint8_t *)(buffer + 1);	
