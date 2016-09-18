@@ -78,7 +78,6 @@ int main(int argc, char *argv[])
 			perror("Client: socket() error");
 			continue;
 		}
-
 		break;
 	}
 	
@@ -147,8 +146,15 @@ int main(int argc, char *argv[])
 	
 		// Get the Request ID and result from the buffer
 		received_request_ID = *(uint8_t *)(buffer + 1);	
-		received_result = *(int32_t *)(buffer + 3);		
-		
+		received_result = *(int32_t *)(buffer + 3);
+
+		// int i;
+		// for (i = 0; i < sizeof(buffer); i++) {
+  //   		if (i > 0) printf(":");
+  //   		printf("%02X", buffer[i]);
+		// }
+		// printf("\n");
+
 		printf("Client: Packet received. Request ID = %d, Result = %d.", received_request_ID, received_result);
 		
 		// Increment the Request ID for the next iteration of the loop (to keep it unique)

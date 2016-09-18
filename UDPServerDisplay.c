@@ -17,16 +17,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-/*    switch (opcodeInput) {
-    	case "+": result = operand1Input + operand2Input;
-        case "-": result = operand1Input - operand2Input;
-        case "|": result = operand1Input | operand2Input;
-        case "&": result = operand1Input & operand2Input;
-        case ">>": result = operand1Input >> operand2Input;;
-        case "<<": result = operand1Input << operand2Input;;
-        default: throw new Exception("invalid logic");
-    }
-    */
 
 // _M1 Not needed anymore 
 #define MYPORT "10011"  
