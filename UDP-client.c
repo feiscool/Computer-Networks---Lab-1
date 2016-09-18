@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <time.h>
 
 #define MAXBUFLEN 100
 
@@ -18,6 +19,8 @@ int main(int argc, char *argv[])
 	int rv;
 	int sockfd;
 	int numbytes;
+	int msec;
+	double time_taken;
 	int16_t operand_2_input;
 	int16_t operand_1_input;
 	uint8_t opcode_input;
@@ -30,6 +33,8 @@ int main(int argc, char *argv[])
 	socklen_t server_addr_len;
 	struct addrinfo hints, *servinfo, *p;
 	struct sockaddr_storage server_addr;
+	clock_t start;
+	clock_t end;
 	
 	// Packed struct that will be sent as the data in a packet. A packed struct
 	// is used as it will not contain any "padding" added by the compiler
@@ -70,7 +75,7 @@ int main(int argc, char *argv[])
 	// entry. servinfo contains one or more addrinfo structs, as a host
 	// can have multiple addresses. When a valid entry is found, the socket
 	// is created, and the loop breaks. "sockfd" is the file descriptor to the
-	// socket
+	// socket. Note that the same socket is used to both send and receive data
 	for(p = servinfo; p != NULL; p = p -> ai_next) {
 	
 		if ((sockfd = socket(p -> ai_family, p -> ai_socktype,
@@ -78,6 +83,7 @@ int main(int argc, char *argv[])
 			perror("Client: socket() error");
 			continue;
 		}
+
 		break;
 	}
 	
@@ -94,27 +100,27 @@ int main(int argc, char *argv[])
 	while(1) {
 	
 		// Get the opcode from the user
-		printf("\nEnter an opcode (0-5): ");
+		printf("\nClient: Enter an opcode (0-5): ");
   		scanf("%d", &opcode_input);		// Grabs a decimal value and stores it
   		
   		// Ensure the opcode is valid (between 0 and 5, inclusive) 
   		while(opcode_input < 0 || opcode_input > 5) {
-  			printf ("Invalid input. Enter a new opcode: ");
+  			printf ("Client: Invalid input. Enter a new opcode: ");
   			scanf ("%d", &opcode_input);
   		}
   		
   		// Get the two operands from the user
-  		printf("Enter the first operand: ");
+  		printf("Client: Enter the first operand: ");
   		scanf("%d", &operand_1_input);
-  		printf("Enter the second operand: ");
+  		printf("Client: Enter the second operand: ");
   		scanf("%d", &operand_2_input);
-  		
-  		printf("\nOpcode = %d, Operand 1 = %d, Operand 2 = %d \n", opcode_input, operand_1_input, operand_2_input);
   		
   		// Pack the operands, etc., into a struct. This struct will be sent as the data in a packet
   		struct packed_message packet = {
   			TML, request_ID, opcode_input, number_operands, operand_1_input, operand_2_input
   		};
+  		
+  		start = clock();		// Start the timer
 
 		// Purpose: Send the packet using sendto() and handle the (-1) error case.
 		// Details: Note that an implicit bind occurs when sendto() is called.
@@ -143,19 +149,17 @@ int main(int argc, char *argv[])
 			perror("Client: recvfrom() error");
 			exit(1);
 		}
+		
+		end = clock();		// Stop the timer
+		
+        time_taken = (double)(end - start) / CLOCKS_PER_SEC;
 	
 		// Get the Request ID and result from the buffer
 		received_request_ID = *(uint8_t *)(buffer + 1);	
-		received_result = *(int32_t *)(buffer + 3);
-
-		// int i;
-		// for (i = 0; i < sizeof(buffer); i++) {
-  //   		if (i > 0) printf(":");
-  //   		printf("%02X", buffer[i]);
-		// }
-		// printf("\n");
-
+		received_result = *(int32_t *)(buffer + 3);		
+		
 		printf("Client: Packet received. Request ID = %d, Result = %d.", received_request_ID, received_result);
+		printf("\nClient: Time taken = %f", time_taken);
 		
 		// Increment the Request ID for the next iteration of the loop (to keep it unique)
 		request_ID++;
