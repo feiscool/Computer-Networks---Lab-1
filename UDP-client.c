@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
 		// Get the Request ID and result from the buffer
 		received_request_ID = *(uint8_t *)(buffer + 1);	
 		received_result = *(int32_t *)(buffer + 3);		
-		
+
 		printf("Client: Packet received. Request ID = %d, Result = %d.", received_request_ID, received_result);
 		printf("\nClient: Time taken = %f", time_taken);
 		

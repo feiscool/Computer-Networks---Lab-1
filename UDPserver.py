@@ -2,8 +2,11 @@ import socket
 import sys
 import struct
 import binascii
+import bitstring
 
 errorCode = 0
+reply = bytearray(3)
+print("\n\nbyte array size: %i\n\n", sys.getsizeof(reply))
 
 # Create a TCP/IP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -24,8 +27,8 @@ while True:
     dataCharArray = list(binascii.hexlify(dataReceived))
 
     #parse data
-    TMLReceived = int(dataCharArray[0]) + int(dataCharArray[1]) 
-    reqID = int(dataCharArray[2]) + int(dataCharArray[3]) 
+    TMLReceived = int(dataCharArray[0]) + int(dataCharArray[1])
+    reqID = int(dataCharArray[2]) + int(dataCharArray[3])
     opcode = int(dataCharArray[4]) + int(dataCharArray[5])  
     numOperands = int(dataCharArray[6]) + int(dataCharArray[7]) 
     operand1 = int(dataCharArray[8]) + int(dataCharArray[9]) + int(dataCharArray[10]) + int(dataCharArray[11])
@@ -48,8 +51,15 @@ while True:
     print('result: %i', result)
     
     #construct structResponse
-    reply = struct.pack("i i i i", TMLReceived, reqID, errorCode, result)
-    
+    reply.append(TMLReceived)
+    reply.append(reqID)
+    reply.append(errorCode)
+    reply.append(result)
+
+    for x in range (0, sys.getsizeof(reply)):
+        print(reply[x])
+
     if reply:
         sent = sock.sendto(reply, address)
+        del reply [:]
         print >>sys.stderr, 'sent %s bytes back to %s' % (sent, address)
