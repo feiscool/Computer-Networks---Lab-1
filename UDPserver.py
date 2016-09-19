@@ -2,11 +2,9 @@ import socket
 import sys
 import struct
 import binascii
-#import bitstring
 
 errorCode = 0
-reply = bytearray(0)
-print("\n\nbyte array size: %i\n\n", sys.getsizeof(reply))
+reply = bytearray()
 
 # Create a TCP/IP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -54,7 +52,14 @@ while True:
     reply.append(TMLReceived)
     reply.append(reqID)
     reply.append(errorCode)
+    
+    resultLen = len(str(result))
+    zerosNeeded = 4 - resultLen
+
     reply.append(result)
+
+    for x in range(0, zerosNeeded):
+    	reply.append(0)
 
     for x in reply:
         print(x)
