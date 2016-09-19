@@ -2,10 +2,10 @@ import socket
 import sys
 import struct
 import binascii
-import bitstring
+#import bitstring
 
 errorCode = 0
-reply = bytearray(3)
+reply = bytearray(0)
 print("\n\nbyte array size: %i\n\n", sys.getsizeof(reply))
 
 # Create a TCP/IP socket
@@ -34,7 +34,7 @@ while True:
     operand1 = int(dataCharArray[8]) + int(dataCharArray[9]) + int(dataCharArray[10]) + int(dataCharArray[11])
     operand2 = int(dataCharArray[12]) + int(dataCharArray[13]) + int(dataCharArray[14]) + int(dataCharArray[15])
 
-    #do calculation here
+   #do calculation here
     if (opcode == 0):
         result = int(operand1) + int(operand2)
     if (opcode == 1): 
@@ -48,7 +48,7 @@ while True:
     if (opcode == 5): 
         result = int(operand1) << int(operand2)
 
-    print('result: %i', result)
+    print('result: %d', result)
     
     #construct structResponse
     reply.append(TMLReceived)
@@ -56,8 +56,8 @@ while True:
     reply.append(errorCode)
     reply.append(result)
 
-    for x in range (0, sys.getsizeof(reply)):
-        print(reply[x])
+    for x in reply:
+        print(x)
 
     if reply:
         sent = sock.sendto(reply, address)
