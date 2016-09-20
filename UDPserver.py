@@ -5,7 +5,6 @@ import binascii
 
 errorCode = 0
 result = 0
-reply = bytearray()
 
 # Create a TCP/IP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -61,28 +60,14 @@ while True:
         result = int(operand1) << int(operand2)
 
     #construct structResponse
-    reply.append(TMLReceived)
-    reply.append(reqID)
-    reply.append(errorCode)
+
+    packedStruct = struct.pack("=bbbI", int(7), int(reqID), int(errorCode), int(result))
     
-    resultLen = len(str(result))
-    zerosNeeded = 4 - resultLen
-    resultArray = [int(x) for x in str(result)]
-    #place each byte from the result,
-	#into byte array, starting at index 4.
-
-    for x in range (0, zerosNeeded):
-    	reply.append(0)
-
-    for j in range (0, len(resultArray)):
-        reply.append(resultArray[j])   
-
     print("***contents of reply data**")
-    for x in reply:
-        print(x)
+    print("packedStruct %c" , packedStruct)
     print("*****")
 
     if reply:
-        sent = sock.sendto(reply, address)
+        sent = sock.sendto(packedStruct, address)
         del reply [:]
         print >>sys.stderr, 'sent %s bytes back to %s' % (sent, address)
