@@ -60,6 +60,27 @@ while True:
         result = int(operand1) << int(operand2)
 
     #construct structResponse
+<<<<<<< Updated upstream
+=======
+    try:
+        reply.append(TMLReceived)
+        reply.append(reqID)
+        reply.append(errorCode)
+        
+        resultLen = len(str(result))
+        zerosNeeded = 4 - resultLen
+        resultArray = [int(x) for x in str(result)]
+        #place each byte from the result,
+    	#into byte array, starting at index 4.
+
+        for x in range (0, zerosNeeded):
+        	reply.append(0)
+
+        for j in range (0, len(resultArray)):
+            reply.append(resultArray[j])  
+    except:
+        errorCode = 256       
+>>>>>>> Stashed changes
 
     packedStruct = struct.pack("=bbbI", int(7), int(reqID), int(errorCode), int(result))
     
