@@ -12,14 +12,15 @@ portNum = int(sys.argv[1])
 
 # Bind the socket to the port
 server_address = ('', portNum)
-print >>sys.stderr, 'starting up on %s port %s' % server_address
+print >> sys.stderr, 'Server: Starting up on port %s' % server_address
 sock.bind(server_address)
 
 while True:
-    print >>sys.stderr, '\nwaiting to receive message'
+    
+    print >>sys.stderr, '\nServer: Waiting to receive packet'
     dataReceived, address = sock.recvfrom(1024)
     
-    print >>sys.stderr, 'received %s bytes from %s' % (len(dataReceived), address)
+    print >>sys.stderr, '\nServer: Received %s bytes from %s' % (len(dataReceived), address)
 
     dataCharArray = list(binascii.hexlify(dataReceived))
 
@@ -37,7 +38,7 @@ while True:
     else:
     	op2In = str(dataCharArray[12]) + str(dataCharArray[13]) + str(dataCharArray[14]) + str(dataCharArray[15])
 
-    #convert to int
+    # Convert to int
     TMLReceived = int(TMLReceivedIn)
     reqID = int(reqIDIn)
     opcode = int(opcodeIn)
@@ -45,7 +46,7 @@ while True:
     operand1 = int(op1In, 16)
     operand2 = int(op2In, 16)
 
-   #do calculation here
+   # Do calculation here
     if (opcode == 0):
         result = operand1 + operand2
     if (opcode == 1): 
@@ -59,9 +60,8 @@ while True:
     if (opcode == 5): 
         result = int(operand1) << int(operand2)
 
-    #construct structResponse
-<<<<<<< Updated upstream
-=======
+    # Construct structResponse
+
     try:
         reply.append(TMLReceived)
         reply.append(reqID)
@@ -80,15 +80,14 @@ while True:
             reply.append(resultArray[j])  
     except:
         errorCode = 256       
->>>>>>> Stashed changes
 
     packedStruct = struct.pack("=bbbI", int(7), int(reqID), int(errorCode), int(result))
     
-    print("***contents of reply data**")
-    print("packedStruct %c" , packedStruct)
-    print("*****")
+    # print("***contents of reply data**")
+    # print("packedStruct %c" , packedStruct)
+    # print("*****")
 
     if reply:
         sent = sock.sendto(packedStruct, address)
         del reply [:]
-        print >>sys.stderr, 'sent %s bytes back to %s' % (sent, address)
+        print >>sys.stderr, 'Server: Sent %s bytes back to %s' % (sent, address)
