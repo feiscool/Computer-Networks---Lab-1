@@ -23,37 +23,35 @@ operand2 = input("Client: Enter the second operand: ")
 #construct structResponse
 
 packedStruct = struct.pack("=bbbbhh", int(TML), int(reqID), int(opcode), int(numOperands), int(operand1), int(operand2))
-    
-print("***contents of reply data**")
-print("packedStruct %c" , packedStruct)
-print("*****")
-
 
 # Connect the socket to the port where the server is listening
 server_address = (ipAddress, portNum)
-print >>sys.stderr, 'connecting to %s port %s', ipAddress, portNum
+print >>sys.stderr, 'connecting to', ipAddress, 'port', portNum
 sock.connect(server_address)
 
 #After the connection is established, 
-#data can be sent through the socket with sendall() #
+#data can be sent through the socket with send() #
 #and received with recv().
 try:
     # Send data
     print >>sys.stderr, 'sending...'
-    sock.sendall(packedStruct)
+    sock.send(packedStruct)
 
     print("Sent ", len(packedStruct), " bytes to ", ipAddress)    
 
     # Look for the response
     amount_received = 0
-    amount_expected = len(packedStruct)
+
+    #data will be whatever the server sends back to client
+    # 1 is a placeholder to avoid infinite loop while testing
+    data = '1' #sock.recv(16)
+    amount_expected = len(data)
     
-    # while amount_received < amount_expected:
-    #     data = sock.recv(16)
-    #     amount_received += len(data)
-    #     print >>sys.stderr, 'received "%s"' % data
+    while amount_received < amount_expected:
+        amount_received += len(data)
+        print("received %c" , data)
 
 finally:
-    print >>sys.stderr, 'closing socket'
+    print >>sys.stderr, 'closing socket...'
     sock.close()
 
