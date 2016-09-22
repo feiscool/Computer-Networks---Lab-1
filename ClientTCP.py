@@ -2,56 +2,55 @@ import socket
 import sys
 import struct
 
-TML = 0
+TML = 8
 reqID = 0
 numOperands = 2
 # Create a TCP/IP socket
 ipAddress = 'localhost'#sys.argv[1]
 portNum = 10011#sys.argv[2]
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+while (1):
+	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	opcode = input("Client: Enter an opcode (0-5): ")
+	#Ensure the opcode is valid (between 0 and 5, inclusive) 
+	if(opcode < 0 or opcode > 5): 
+	    opcode = input("Client: Opcode must be between 0 and 5. Please enter a new opcode: ");
 
-opcode = input("Client: Enter an opcode (0-5): ")
+	operand1 = input("Client: Enter the first operand: ")
+	operand2 = input("Client: Enter the second operand: ")
 
-#Ensure the opcode is valid (between 0 and 5, inclusive) 
-if(opcode < 0 or opcode > 5): 
-    opcode = input("Client: Opcode must be between 0 and 5. Please enter a new opcode: ");
+	#construct structResponse
 
-operand1 = input("Client: Enter the first operand: ")
-operand2 = input("Client: Enter the second operand: ")
+	packedStruct = struct.pack("=bbbbhh", int(TML), int(reqID), int(opcode), int(numOperands), int(operand1), int(operand2))
 
-#construct structResponse
+	# Connect the socket to the port where the server is listening
+	server_address = (ipAddress, portNum)
+	print >>sys.stderr, 'connecting to', ipAddress, 'port', portNum
+	sock.connect(server_address)
 
-packedStruct = struct.pack("=bbbbhh", int(TML), int(reqID), int(opcode), int(numOperands), int(operand1), int(operand2))
+	#After the connection is established, 
+	#data can be sent through the socket with send() #
+	#and received with recv().
+	try:
+	    # Send data
+	    print >>sys.stderr, 'sending...'
+	    sock.send(packedStruct)
 
-# Connect the socket to the port where the server is listening
-server_address = (ipAddress, portNum)
-print >>sys.stderr, 'connecting to', ipAddress, 'port', portNum
-sock.connect(server_address)
+	    print("Sent ", len(packedStruct), " bytes to ", ipAddress)    
+	    reqID = reqID + 1
+	    # Look for the response
+	    amount_received = 0
 
-#After the connection is established, 
-#data can be sent through the socket with send() #
-#and received with recv().
-try:
-    # Send data
-    print >>sys.stderr, 'sending...'
-    sock.send(packedStruct)
+	    #data will be whatever the server sends back to client
+	    # 1 is a placeholder to avoid infinite loop while testing
+	    data = '1' #sock.recv(16)
+	    amount_expected = len(data)
+	    
+	    while amount_received < amount_expected:
+	        amount_received += len(data)
 
-    print("Sent ", len(packedStruct), " bytes to ", ipAddress)    
-
-    # Look for the response
-    amount_received = 0
-
-    #data will be whatever the server sends back to client
-    # 1 is a placeholder to avoid infinite loop while testing
-    data = '1' #sock.recv(16)
-    amount_expected = len(data)
-    
-    while amount_received < amount_expected:
-        amount_received += len(data)
-        print("received %c" , data)
-
-finally:
-    print >>sys.stderr, 'closing socket...'
-    sock.close()
+	finally:
+	    test = sock.recv(16)
+	    
+sock.close()
 
