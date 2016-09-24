@@ -1,6 +1,7 @@
 import socket
 import sys
 import struct
+import binascii
 
 TML = 8
 reqID = 0
@@ -39,15 +40,14 @@ while (1):
 	    print("Sent ", len(packedStruct), " bytes to ", ipAddress)    
 	    reqID = reqID + 1
 	    # Look for the response
+	    
+	    data = sock.recv(16)
 	    amount_received = 0
-
-	    #data will be whatever the server sends back to client
-	    # 1 is a placeholder to avoid infinite loop while testing
-	    data = '1' #sock.recv(16)
 	    amount_expected = len(data)
 	    
 	    while amount_received < amount_expected:
 	        amount_received += len(data)
+	        print(list(binascii.hexlify(data)))
 
 	finally:
 	    test = sock.recv(16)

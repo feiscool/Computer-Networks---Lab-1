@@ -183,8 +183,9 @@ int main()
 			struct reply replymessage = { TMLsend, requestID, errorCode, result };
 
 			//Sending the struct to the client.
-			if (send(new_fd, (void *) &replymessage, TMLsend, 0) == -1)
+			if (send(new_fd, (void *) &replymessage, TMLsend, 0) == -1) {
 				perror("send");
+			}
 			close(new_fd);
 			exit(0);
 		}
