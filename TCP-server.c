@@ -42,14 +42,17 @@ void *get_in_addr(struct sockaddr *sa)
 
 int main()
 {
+	//Struct that contains the information that will be sent back to the
+	// client
 	struct reply
 	{
-  	uint8_t  TML;
-  	uint8_t requestID;
-	uint8_t errorCode;
-  	int32_t result;
+  		uint8_t  TML;
+	  	uint8_t requestID;
+		uint8_t errorCode;
+  		int32_t result;
 	} __attribute__((__packed__));
 
+	//variables used throughout the program.
 	int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
 	struct addrinfo hints, *servinfo, *p;
 	struct sockaddr_storage their_addr; // connector's address information
@@ -65,6 +68,7 @@ int main()
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE; // use my IP
 
+	//Sets up the server. Creates a port to listen on
 	if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
@@ -93,6 +97,7 @@ int main()
 		break;
 	}
 
+	//Cleaning up used data
 	freeaddrinfo(servinfo); // all done with this structure
 
 	if (p == NULL)  {
@@ -125,7 +130,9 @@ int main()
 
 		inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
 		printf("server: got connection from %s\n", s);
-
+		
+		// Creates a child process that will do the operations and send data back to the client
+		//	allowing for the server to accept more requests.
 		if (!fork()) { // this is the child process
 			close(sockfd); // child doesn't need the listener
 			bzero(buffer, MAXBUFLEN);
@@ -134,6 +141,8 @@ int main()
 			{
 				perror("read");
 			}
+			
+			// Parsing data that was sent to the server.
 			int requestID =*(uint8_t *) (buffer + 1);
 			int opcode = *(uint8_t *) (buffer + 2);
 			int TML = *(uint8_t *) (buffer);
@@ -142,6 +151,10 @@ int main()
 			int operand2 = *(uint16_t *) (buffer + 6);
 			int32_t result;
 			uint8_t errorCode = 0;
+			uint8_t TMLsend = 7;
+
+			//Performing the requested operation on the
+			//	operands
 			switch(opcode){
 				case(0):
 					result = operand1 + operand2;
@@ -165,11 +178,11 @@ int main()
 					errorCode = 1;
 					perror("invalid opcode");
 			}
-			uint8_t TMLsend = 7;
-			
-			struct reply replymessage = {
-				TMLsend, requestID, errorCode, result
-			};
+
+			//Filling the struct with the information to send back to the client.
+			struct reply replymessage = { TMLsend, requestID, errorCode, result };
+
+			//Sending the struct to the client.
 			if (send(new_fd, (void *) &replymessage, TMLsend, 0) == -1)
 				perror("send");
 			close(new_fd);
